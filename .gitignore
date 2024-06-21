@@ -1,6 +1,7 @@
 downloaded_files/
-.venv
-out
-m3u8_urls
-vtt_files
-.idea
+.venv/
+m3u8_urls/
+vtt_files/
+.idea/
+mp4_out/
+test.py

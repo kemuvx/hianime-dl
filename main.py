@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from colorama import Fore
 from seleniumbase import Driver
 import os
+import ffmpeg
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -32,14 +33,10 @@ def get_urls_to_animes_from_html(html_of_page):
     urls_for_episodes = []
     soup = BeautifulSoup(html_of_page, 'html.parser')
     first_link = soup.find('div', id='episodes-content').find('a', class_='ssl-item ep-item active')['href']
-    print(first_link)
     urls_for_episodes.append("https://hianime.to" + str(first_link))
     links = soup.find('div', id='episodes-content').find_all('a', class_='ssl-item ep-item')
     for link in links:
         urls_for_episodes.append("https://hianime.to" + link['href'])
-
-    for url in urls_for_episodes:
-        print(url)
     return urls_for_episodes
 
 
@@ -106,7 +103,7 @@ class Main:
         # CHROME DRIVER
         try:
             print("Opening chrome driver...")
-            driver = Driver(mobile=True, wire=True, headless=True,
+            driver = Driver(mobile=True, wire=True, headed=True,
                             extension_zip='extensions/CJPALHDLNBPAFIAMEJDNHCPHJBKEIAGM_1_58_0_0.zip')
 
             # CONNECT TO THE HIANIME
@@ -193,23 +190,38 @@ class Main:
 
             driver.quit()
             print("Driver closed")
-
+        try: driver.quit
+        except: pass
         # DOWNLOAD MP4 FROM M3U8
-        download_or_no = input("Do you want to download m3u8 files now?\nType 0 to exit")
+        download_or_no = input("Do you want to download m3u8 files?\nType 0 to exit: ")
         if download_or_no == "0": quit(0)
+
         import m3u8_To_MP4
         folder_name = chosen_anime_dict['name'] + "/"
-        os.makedirs('./mp4_out/' + folder_name, exist_ok=True)
+        os.makedirs('./mp4_out/' + folder_name + "no_sub/", exist_ok=True)
         i = 1
         for uri in uri_links_list:
             print(Fore.LIGHTYELLOW_EX + "\nDownloading episode " + str(i) + Fore.WHITE)
             m3u8_To_MP4.multithread_download(uri)
             name = chosen_anime_dict['name'] + " ep" + str(i) + ".mp4"
-            folder_name = chosen_anime_dict['name'] + "/"
             os.rename("m3u8_To_MP4.mp4", name)
-            shutil.move(name, "./mp4_out/" + folder_name + name)
+            shutil.move(name, "./mp4_out/" + folder_name + "no_sub/" + name)
             print(Fore.LIGHTYELLOW_EX + "\nEpisode " + str(i) + " has been downloaded" + Fore.WHITE)
             i += 1
 
+        # HARDSUB ON EPISODES
+        hardsub_or_no = input("Do you want to hardsub videos?\nType 0 to exit: ")
+        if hardsub_or_no == "0": quit(0)
+        os.makedirs('./mp4_out/' + folder_name + "hard_sub/", exist_ok=True)
+        for i in range(1, int(chosen_anime_dict['sub_episodes']) + 1):
+            (
+                ffmpeg
+                .input("./mp4_out/" + folder_name + "no_sub/" + name)
+                .filter("subtitles", "vtt_files/" + folder_name + chosen_anime_dict['name'] + " subs " + "ep" + str(i) + ".vtt" )
+                .output("./mp4_out/" + folder_name + "hard_sub/" + name + ".mp4")
+                .run()
+            )
+        # delete_no_sub_or_no = input("Delete raw episodes?\nType 1 to delete: ")
+        # if delete_no_sub_or_no == "1": os.removedirs("./mp4_out/" + folder_name + "no_sub/")
 
 Main()
