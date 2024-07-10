@@ -252,7 +252,7 @@ class Main:
             print("Driver closed")
             
         os.makedirs("json", exist_ok=True)
-        json_filename = os.path.join("json", f"{chosen_anime_dict['name']}.json\n")
+        json_filename = os.path.join("json", f"{chosen_anime_dict['name']}.json")
         with open(json_filename, 'w') as f:
             json.dump(episode_info_list, f, indent=4)
             print(f"\nEpisode information exported to {json_filename}")
