@@ -20,6 +20,7 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+
 # FUNCTION TO VALIDATE USER INPUT FOR EPISODE NUMBER
 def get_episode_input(prompt, min_value, max_value):
     while True:
@@ -34,7 +35,9 @@ def get_episode_input(prompt, min_value, max_value):
 
 
 def choose_resolution():
-    print("\nChoose resolution:\n\n1. 1080p (FHD)\n2. 720p (HD)\n3. 360p (SD)\n")
+    print("\nChoose resolution:\n\n"
+          "1." + Fore.LIGHTYELLOW_EX + " 1080p" + Fore.LIGHTWHITE_EX + " (FHD)\n2." + Fore.LIGHTYELLOW_EX + " 720p " +
+          Fore.LIGHTWHITE_EX + "(HD)\n3. " + Fore.LIGHTYELLOW_EX + "360p " + Fore.LIGHTWHITE_EX + " (SD)\n")
     resolution_map = {1: 1080, 2: 720, 3: 360}
     while True:
         try:
@@ -47,19 +50,21 @@ def choose_resolution():
         except ValueError:
             print("Invalid input. Please enter a number (1, 2, or 3).")
 
+
 def get_rid_of_bad_chars(word):
     bad_chars = ['-', '.', '/', '\\', '?', '%', '*', '<', '>', '|', '"', "[", "]", ":"]
     for char in bad_chars:
         word = word.replace(char, '')
     return word
 
+
 def get_urls_to_animes_from_html(html_of_page, start_episode, end_episode):
     episode_info_list = []
     soup = BeautifulSoup(html_of_page, 'html.parser')
-    
+
     # Find all episode links with the attribute data-number
     links = soup.find_all('a', attrs={'data-number': True})
-    
+
     for link in links:
         episode_number = int(link.get('data-number'))
         if start_episode <= episode_number <= end_episode:
@@ -72,8 +77,9 @@ def get_urls_to_animes_from_html(html_of_page, start_episode, end_episode):
                 'M3U8': None  # Initialize M3U8 field as None
             }
             episode_info_list.append(episode_info)
-    
+
     return episode_info_list
+
 
 class Main:
 
@@ -120,7 +126,8 @@ class Main:
         for i, el in dict_with_anime_elements.items():
             print(
                 Fore.LIGHTRED_EX + str(i) + ": " + Fore.LIGHTCYAN_EX + el['name'] + Fore.WHITE + " | " + "Episodes: " +
-                Fore.LIGHTYELLOW_EX + str(el['sub_episodes']) + Fore.LIGHTWHITE_EX + " sub" + Fore.LIGHTGREEN_EX + " / " +
+                Fore.LIGHTYELLOW_EX + str(
+                    el['sub_episodes']) + Fore.LIGHTWHITE_EX + " sub" + Fore.LIGHTGREEN_EX + " / " +
                 Fore.LIGHTYELLOW_EX + str(el['dub_episodes']) + Fore.LIGHTWHITE_EX + " dub")
 
         # USER SELECTS ANIME
@@ -136,10 +143,10 @@ class Main:
                 print("Invalid input. Please enter a valid number.")
 
         # Display chosen anime details
-        print(f"\nYou have chosen {chosen_anime_dict['name']}")
+        print("\nYou have chosen " + Fore.LIGHTCYAN_EX + chosen_anime_dict['name'] + Fore.LIGHTWHITE_EX)
         print(f"URL: {chosen_anime_dict['url']}")
-        print(f"Sub Episodes: {chosen_anime_dict['sub_episodes']}")
-        print(f"Dub Episodes: {chosen_anime_dict['dub_episodes']}")
+        print("Sub Episodes: " + Fore.LIGHTYELLOW_EX + str(chosen_anime_dict['sub_episodes']) + Fore.LIGHTWHITE_EX)
+        print("Dub Episodes: " + Fore.LIGHTYELLOW_EX + str(chosen_anime_dict['dub_episodes']) + Fore.LIGHTWHITE_EX)
 
         download_type = 'sub'
         if chosen_anime_dict['dub_episodes'] != 0 and chosen_anime_dict['sub_episodes'] != 0:
@@ -158,11 +165,15 @@ class Main:
 
         # Get starting and ending episode numbers
         if chosen_anime_dict[f"{download_type}_episodes"] != "1":
-            start_episode = get_episode_input("Enter the starting episode number: ", 1, chosen_anime_dict[f"{download_type}_episodes"])
-            end_episode = get_episode_input("Enter the ending episode number: ", start_episode, chosen_anime_dict[f"{download_type}_episodes"])
+            start_episode = get_episode_input("Enter the starting episode number: ", 1,
+                                              chosen_anime_dict[f"{download_type}_episodes"])
+            end_episode = get_episode_input("Enter the ending episode number: ", start_episode,
+                                            chosen_anime_dict[f"{download_type}_episodes"])
             while end_episode < start_episode:
-                print(f"Ending episode cannot be less than starting episode ({start_episode}). Please enter a valid number.")
-                end_episode = get_episode_input("Enter the ending episode number: ", chosen_anime_dict[f"{download_type}_episodes"])
+                print(
+                    f"Ending episode cannot be less than starting episode ({start_episode}). Please enter a valid number.")
+                end_episode = get_episode_input("Enter the ending episode number: ",
+                                                chosen_anime_dict[f"{download_type}_episodes"])
         else:
             start_episode = 1
             end_episode = 1
@@ -188,34 +199,35 @@ class Main:
                 server_button = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, server_button_xpath))
                 )
-                
+
                 # Scroll the element into view
                 driver.execute_script("arguments[0].scrollIntoView(true);", server_button)
-                
+
                 # Attempt to click the button
                 server_button.click()
             except Exception as e:
                 # Handle click interception
                 print(f"Error selecting server: {e}")
-                
+
                 # Attempt to find and remove overlay
                 try:
                     overlay_element = driver.find_element(By.XPATH, "//div[contains(@style, 'z-index: 2147483647')]")
                     driver.execute_script("arguments[0].style.display='none'", overlay_element)
                 except Exception as e:
                     print(f"No overlay found to remove: {e}")
-                
+
                 # Try clicking the button again
                 server_button.click()
 
             # GET URLS OF EPISODES
             episode_info_list = get_urls_to_animes_from_html(driver.page_source, start_episode, end_episode)
-            
+
             # START SCRAPING URI'S TO .M3U8 AND .VTT
 
             # LIST OF POSSIBLE SUBTITLES LANGUAGES
             lang_list = (
-                'ita', 'jpn', 'pol', 'por', 'ara', 'chi', 'cze', 'dan', 'dut', 'fin', 'fre', 'ger', 'gre', 'heb', 'hun', 'ind',
+                'ita', 'jpn', 'pol', 'por', 'ara', 'chi', 'cze', 'dan', 'dut', 'fin', 'fre', 'ger', 'gre', 'heb', 'hun',
+                'ind',
                 'kor', 'nob', 'pol', 'rum', 'rus', 'tha', 'vie', 'swe', 'spa', 'tur')
 
             used_vtt_uri_list = []
@@ -223,13 +235,14 @@ class Main:
             counter_for_reload_page = 0
 
             os.makedirs("vtt_files/" + chosen_anime_dict['name'], exist_ok=True)
-            
+
             for episode in episode_info_list:
                 url = episode['url']
                 number = episode['number']
                 title = episode['title']
-                 
-                print(Fore.LIGHTGREEN_EX + "Get" + Fore.LIGHTWHITE_EX + f" m3u8 link to Episode {number}..." + Fore.LIGHTWHITE_EX)
+
+                print(
+                    Fore.LIGHTGREEN_EX + "Get" + Fore.LIGHTWHITE_EX + f" Episode {number}..." + Fore.LIGHTWHITE_EX)
                 driver.get(url)
 
                 uri_to_m3u8_is_scraped = False
@@ -246,23 +259,27 @@ class Main:
                     for request in driver.requests:
                         uri = request.url
                         try:
-                            if uri.endswith('master.m3u8') and uri_to_m3u8_is_scraped is False and uri not in used_m3u8_uri_list and "biananset" in uri:
-                                print('Found uri to master.m3u8: ' + uri)
+                            if uri.endswith(
+                                    'master.m3u8') and uri_to_m3u8_is_scraped is False and uri not in used_m3u8_uri_list and "biananset" in uri:
+                                print(Fore.LIGHTGREEN_EX + 'Found' + Fore.LIGHTWHITE_EX + ' master.m3u8')
                                 uri_to_m3u8_is_scraped = True
                                 used_m3u8_uri_list.append(uri)
                                 episode['M3U8'] = uri
                         except Exception as e:
                             print(f"Error processing URI: {uri}, {e}")
-                            
+
                     # FIND VTT IN NETWORK REQUESTS
                     start_time = time.time()
                     for request in driver.requests:
                         uri = request.url
-                        if uri.endswith(".vtt") and "thumbnails" not in uri and not uri_to_vtt_is_scraped and not any(ele in uri for ele in lang_list) and uri not in used_vtt_uri_list:
-                            print("Found uri to vtt: " + uri)
+                        if uri.endswith(".vtt") and "thumbnails" not in uri and not uri_to_vtt_is_scraped and not any(
+                                ele in uri for ele in lang_list) and uri not in used_vtt_uri_list:
+                            print(Fore.LIGHTGREEN_EX + "Found " + Fore.LIGHTWHITE_EX + "subtitles vtt")
                             used_vtt_uri_list.append(uri)
                             uri_to_vtt_is_scraped = True
-                            with open(os.path.join("vtt_files", chosen_anime_dict['name'], f"{chosen_anime_dict['name']} - Episode {number} - {title}.vtt"), 'wb') as subs_file:
+                            with open(os.path.join("vtt_files", chosen_anime_dict['name'],
+                                                   f"{chosen_anime_dict['name']} - Episode {number} - {title}.vtt"),
+                                      'wb') as subs_file:
                                 content_of_uri = requests.get(uri, headers=headers).content
                                 subs_file.write(content_of_uri)
 
@@ -271,7 +288,7 @@ class Main:
                         print(f"Timeout reached for Episode {number}, proceeding without VTT.")
                         uri_to_vtt_is_scraped = True
                     retry_count += 1
-                    
+
                 counter_for_reload_page += 1
                 if counter_for_reload_page == 5:
                     counter_for_reload_page = 0
@@ -281,27 +298,28 @@ class Main:
         finally:
             driver.quit()
             print("Driver closed")
-            
+
         os.makedirs("json", exist_ok=True)
         json_filename = os.path.join("json", f"{chosen_anime_dict['name']}.json")
         with open(json_filename, 'w') as f:
             json.dump(episode_info_list, f, indent=4)
-            print(f"\nEpisode information exported to {json_filename}")
-    
+            print("\nEpisode information exported to " + Fore.LIGHTMAGENTA_EX + json_filename + Fore.LIGHTWHITE_EX)
+
         # DOWNLOAD MP4 FROM M3U8
         download_or_no = input("Do you want to download the episodes?\nType 0 to exit: ")
         if download_or_no == "0": quit(0)
-        
+
         folder_name = chosen_anime_dict['name']
         output_folder = os.path.join('./mp4_out', folder_name)
         os.makedirs(output_folder, exist_ok=True)
-        
+
         resolution_height = choose_resolution()
-        print(f"You chose: {resolution_height}p resolution\n")
-        print(f"\nOutput Folder: {output_folder}\n\n")
-        
+        print(f"You chose: " + Fore.LIGHTYELLOW_EX + f"{resolution_height}p" + Fore.LIGHTWHITE_EX + " resolution\n")
+        print(f"\nOutput Folder:" + Fore.LIGHTMAGENTA_EX + f" {output_folder}\n\n" + Fore.LIGHTWHITE_EX)
+
+
         try:
-            ydl = yt_dlp.YoutubeDL()            
+            ydl = yt_dlp.YoutubeDL()
             for episode in episode_info_list:
                 url = episode['M3U8']
                 number = episode['number']
@@ -313,13 +331,14 @@ class Main:
                     'outtmpl': os.path.join(output_folder, f"{folder_name} - Episode {number} - {title}.mp4"),
                     'format': f'bestvideo[height<={resolution_height}]+bestaudio/best[height<={resolution_height}]',
                 }
-                print(f"Downloading {folder_name} - Episode {number} - {title}.mp4.")
+                print(Fore.LIGHTGREEN_EX + "Downloading " + Fore.LIGHTCYAN_EX + f"{folder_name}"+ Fore.LIGHTWHITE_EX + " - Episode" + Fore.LIGHTYELLOW_EX + f" {number}" + Fore.LIGHTWHITE_EX + " - " + f" {title}.mp4.")
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([url])
-                print(f"Downloaded {folder_name} - Episode {number} - {title}.mp4 successfully.\n")
+                print(Fore.LIGHTGREEN_EX + "Downloaded " + Fore.LIGHTCYAN_EX + f"{folder_name}"+ Fore.LIGHTWHITE_EX + " - Episode" + Fore.LIGHTYELLOW_EX + f" {number}" + Fore.LIGHTWHITE_EX + " - "f" {title}.mp4 " "successfully.")
 
         except Exception as e:
             print(f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     Main()
