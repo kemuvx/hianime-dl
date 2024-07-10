@@ -4,4 +4,5 @@ m3u8_urls/
 vtt_files/
 .idea/
 mp4_out/
+json/
 test.py
