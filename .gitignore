@@ -1,0 +1,7 @@
+downloaded_files/
+.venv/
+vtt_files/
+.idea/
+mp4_out/
+json/
+test.py
