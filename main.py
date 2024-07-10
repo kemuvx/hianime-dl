@@ -92,7 +92,11 @@ class Main:
         for i, element in enumerate(anime_elements, 1):
             name_of_anime = get_rid_of_bad_chars(element.find('h3', class_='film-name').text)
             url_of_anime = "https://hianime.to" + element.find('a', class_='film-poster-ahref item-qtip')['href']
-            sub_episodes_available = element.find('div', class_="tick-item tick-sub").text
+            try:
+                # Some anime have no subs
+                sub_episodes_available = element.find('div', class_="tick-item tick-sub").text
+            except AttributeError:
+                sub_episodes_available = "no"
             try:
                 dub_episodes_available = element.find('div', class_="tick-item tick-dub").text
             except AttributeError:
@@ -122,17 +126,27 @@ class Main:
         print(f"Dub Episodes: {chosen_anime_dict['dub_episodes']}")
 
         download_type = 'sub'
-        if chosen_anime_dict['dub_episodes'] != "no":
-            download_type = input("\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
+        if chosen_anime_dict['dub_episodes'] != "no" and chosen_anime_dict['sub_episodes'] != "no":
+            download_type = input(
+                "\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
             while download_type not in ['sub', 'dub']:
                 print("Invalid choice. Please enter 'sub' or 'dub'.")
-                download_type = input("\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
-        else:
+                download_type = input(
+                    "\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
+
+        elif chosen_anime_dict['dub_episodes'] == "no":
             print("Dub episodes are not available. Defaulting to sub.")
+        else:
+            print("Sub episodes are not available. Defaulting to dub.")
+            download_type = "dub"
 
         # Get starting and ending episode numbers
-        start_episode = int(input("Enter the starting episode number: "))
-        end_episode = int(input("Enter the ending episode number: "))
+        if chosen_anime_dict[f"{download_type}_episodes"] != "1":
+            start_episode = int(input("Enter the starting episode number: "))
+            end_episode = int(input("Enter the ending episode number: "))
+        else:
+            start_episode = 1
+            end_episode = 1
 
         # CHROME DRIVER
         try:
