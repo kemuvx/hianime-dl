@@ -103,11 +103,11 @@ class Main:
                 # Some anime have no subs
                 sub_episodes_available = element.find('div', class_="tick-item tick-sub").text
             except AttributeError:
-                sub_episodes_available = "no"
+                sub_episodes_available = 0
             try:
                 dub_episodes_available = element.find('div', class_="tick-item tick-dub").text
             except AttributeError:
-                dub_episodes_available = "no"
+                dub_episodes_available = 0
 
             dict_with_anime_elements[i] = {
                 'name': name_of_anime,
@@ -142,7 +142,7 @@ class Main:
         print(f"Dub Episodes: {chosen_anime_dict['dub_episodes']}")
 
         download_type = 'sub'
-        if chosen_anime_dict['dub_episodes'] != "no" and chosen_anime_dict['sub_episodes'] != "no":
+        if chosen_anime_dict['dub_episodes'] != 0 and chosen_anime_dict['sub_episodes'] != 0:
             download_type = input(
                 "\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
             while download_type not in ['sub', 'dub']:
@@ -150,7 +150,7 @@ class Main:
                 download_type = input(
                     "\nBoth sub and dub episodes are available. Do you want to download sub or dub? (Enter 'sub' or 'dub'): ").strip().lower()
 
-        elif chosen_anime_dict['dub_episodes'] == "no":
+        elif chosen_anime_dict['dub_episodes'] == 0:
             print("Dub episodes are not available. Defaulting to sub.")
         else:
             print("Sub episodes are not available. Defaulting to dub.")
