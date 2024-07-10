@@ -20,6 +20,19 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+# FUNCTION TO VALIDATE USER INPUT FOR EPISODE NUMBER
+def get_episode_input(prompt, min_value, max_value):
+    while True:
+        try:
+            episode_no = int(input(prompt))
+            if min_value <= episode_no <= max_value:
+                return episode_no
+            else:
+                print(f"Please enter a number between {min_value} and {max_value}.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
+
 def choose_resolution():
     print("\nChoose resolution:\n\n1. 1080p (FHD)\n2. 720p (HD)\n3. 360p (SD)\n")
     resolution_map = {1: 1080, 2: 720, 3: 360}
@@ -54,7 +67,7 @@ def get_urls_to_animes_from_html(html_of_page, start_episode, end_episode):
             episode_title = link.get('title')
             episode_info = {
                 'url': url,
-                'number': episode_number,
+                'number': int(episode_number),
                 'title': episode_title,
                 'M3U8': None  # Initialize M3U8 field as None
             }
@@ -66,12 +79,6 @@ class Main:
 
     def __init__(self):
         print(Fore.LIGHTGREEN_EX + "HiAnime " + Fore.LIGHTWHITE_EX + "Downloader")
-
-        # REMOVE TRASH
-        try:
-            os.remove('m3u8_To_MP4.mp4')
-        except FileNotFoundError:
-            pass
 
         name_of_anime = input("Enter Name of Anime: ")
 
@@ -105,8 +112,9 @@ class Main:
             dict_with_anime_elements[i] = {
                 'name': name_of_anime,
                 'url': url_of_anime,
-                'sub_episodes': sub_episodes_available,
-                'dub_episodes': dub_episodes_available}
+                'sub_episodes': int(sub_episodes_available),
+                'dub_episodes': int(dub_episodes_available)
+            }
 
         # PRINT ANIME TITLES TO THE CONSOLE
         for i, el in dict_with_anime_elements.items():
@@ -116,8 +124,16 @@ class Main:
                 Fore.LIGHTYELLOW_EX + str(el['dub_episodes']) + Fore.LIGHTWHITE_EX + " dub")
 
         # USER SELECTS ANIME
-        number_of_anime = int(input("\nSelect an anime you want to download: "))
-        chosen_anime_dict = dict_with_anime_elements[number_of_anime]
+        while True:
+            try:
+                number_of_anime = int(input("\nSelect an anime you want to download: "))
+                if number_of_anime in dict_with_anime_elements:
+                    chosen_anime_dict = dict_with_anime_elements[number_of_anime]
+                    break
+                else:
+                    print("Invalid anime number. Please select a valid anime.")
+            except ValueError:
+                print("Invalid input. Please enter a valid number.")
 
         # Display chosen anime details
         print(f"\nYou have chosen {chosen_anime_dict['name']}")
@@ -142,8 +158,11 @@ class Main:
 
         # Get starting and ending episode numbers
         if chosen_anime_dict[f"{download_type}_episodes"] != "1":
-            start_episode = int(input("Enter the starting episode number: "))
-            end_episode = int(input("Enter the ending episode number: "))
+            start_episode = get_episode_input("Enter the starting episode number: ", 1, chosen_anime_dict[f"{download_type}_episodes"])
+            end_episode = get_episode_input("Enter the ending episode number: ", start_episode, chosen_anime_dict[f"{download_type}_episodes"])
+            while end_episode < start_episode:
+                print(f"Ending episode cannot be less than starting episode ({start_episode}). Please enter a valid number.")
+                end_episode = get_episode_input("Enter the ending episode number: ", chosen_anime_dict[f"{download_type}_episodes"])
         else:
             start_episode = 1
             end_episode = 1
@@ -203,9 +222,7 @@ class Main:
             used_m3u8_uri_list = []
             counter_for_reload_page = 0
 
-            os.makedirs("m3u8_urls", exist_ok=True)
             os.makedirs("vtt_files/" + chosen_anime_dict['name'], exist_ok=True)
-
             
             for episode in episode_info_list:
                 url = episode['url']
