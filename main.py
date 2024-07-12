@@ -169,11 +169,6 @@ class Main:
                                               chosen_anime_dict[f"{download_type}_episodes"])
             end_episode = get_episode_input("Enter the ending episode number: ", start_episode,
                                             chosen_anime_dict[f"{download_type}_episodes"])
-            while end_episode < start_episode:
-                print(
-                    f"Ending episode cannot be less than starting episode ({start_episode}). Please enter a valid number.")
-                end_episode = get_episode_input("Enter the ending episode number: ",
-                                                chosen_anime_dict[f"{download_type}_episodes"])
         else:
             start_episode = 1
             end_episode = 1
